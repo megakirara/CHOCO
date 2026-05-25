@@ -61,9 +61,45 @@ const closeBtn = document.getElementById('error-close');
 const counterEl = document.getElementById('click-counter');
 let width, height, t = 0;
 let clickCount = 0, shaking = false, shakeDuration = 0;
+let errorDone = false;
+let uraLevel = 0;
+
+const MAX_URA = 16;
+
+const uraMessages = [
+    { txt:"…？",                                      x:0.2,  y:0.22, size:13 },
+    { txt:"なに？",                                   x:0.75, y:0.72, size:14 },
+    { txt:"まだ押すの",                               x:0.5,  y:0.15, size:14 },
+    { txt:"…………",                                  x:0.25, y:0.80, size:15 },
+    { txt:"やめて",                                   x:0.72, y:0.32, size:16 },
+    { txt:"ねえ",                                     x:0.38, y:0.86, size:18 },
+    { txt:"やめてって言ってる",                       x:0.5,  y:0.5,  size:20 },
+    { txt:"こわい",                                   x:0.18, y:0.58, size:22 },
+    { txt:"もうやだ",                                 x:0.65, y:0.18, size:24 },
+    { txt:"（´；ω；｀）",                            x:0.32, y:0.68, size:26 },
+    { txt:"限界です",                                 x:0.55, y:0.40, size:28 },
+    { txt:"ほんとうに",                               x:0.22, y:0.45, size:30 },
+    // 後半4枚：中央に順番に出て、前のは薄くフェードして残る
+    { txt:"いい加減にしてください",                   x:0.5,  y:0.38, size:32 },
+    { txt:"止める気はないんですか？",                 x:0.5,  y:0.52, size:32 },
+    { txt:"君のおへそをほじるよ( 👁️ _ 👁️ )？",      x:0.5,  y:0.5,  size:30 },
+    { txt:"もうやめてよおおおおおおお｡°(°´ᯅ`°)°｡", x:0.5,  y:0.5,  size:28 },
+];
 
 const hadaColors = ['#c47860','#d89a7a','#e6b89e','#b87a66','#bf6e55','#e8a888'];
 const ghostColors = ['#B3E5FC','#F8BBD0'];
+
+const rings = [
+    { type:'hada',  orbitR:80,  count:10, ballR:7,  dir:-1, speed:0.35 },
+    { type:'ghost', orbitR:150, count:8,  size:38,  dir:1,  speed:0.22 },
+    { type:'hada',  orbitR:220, count:16, ballR:14, dir:-1, speed:0.28 },
+    { type:'ghost', orbitR:295, count:10, size:50,  dir:1,  speed:0.18 },
+    { type:'hada',  orbitR:370, count:22, ballR:20, dir:-1, speed:0.22 },
+    { type:'ghost', orbitR:450, count:13, size:62,  dir:1,  speed:0.14 },
+    { type:'hada',  orbitR:535, count:30, ballR:28, dir:-1, speed:0.18 },
+    { type:'ghost', orbitR:620, count:16, size:72,  dir:1,  speed:0.11 },
+    { type:'hada',  orbitR:710, count:36, ballR:18, dir:-1, speed:0.14 },
+];
 
 function resize() {
     width = canvas.width = window.innerWidth;
@@ -72,82 +108,107 @@ function resize() {
 window.addEventListener('resize', resize);
 resize();
 
-// リング設定：チョコボール列とお化け列を交互に、7列まで拡張
-const rings = [
-    { type:'hada', orbitR:80,  count:10, ballR:7,  dir:-1, speed:0.35 },
-    { type:'ghost', orbitR:150, count:8,  size:38,  dir:1,  speed:0.22 },
-    { type:'hada', orbitR:220, count:16, ballR:14, dir:-1, speed:0.28 },
-    { type:'ghost', orbitR:295, count:10, size:50,  dir:1,  speed:0.18 },
-    { type:'hada', orbitR:370, count:22, ballR:20, dir:-1, speed:0.22 },
-    { type:'ghost', orbitR:450, count:13, size:62,  dir:1,  speed:0.14 },
-    { type:'hada', orbitR:535, count:30, ballR:28, dir:-1, speed:0.18 },
-    { type:'ghost', orbitR:620, count:16, size:72,  dir:1,  speed:0.11 },
-    { type:'hada', orbitR:710, count:36, ballR:18, dir:-1, speed:0.14 },
-];
-
 function drawGhost(x, y, w, color) {
     let r = w * 0.7;
     ctx.save();
     ctx.translate(x, y);
-    ctx.strokeStyle = "#1a1a1a";
-    ctx.lineWidth = 1.5;
-    ctx.lineJoin = "round";
-    let grad = ctx.createLinearGradient(-r, -r, r, r * 2.5);
-    if (color === '#F8BBD0') {
-        grad.addColorStop(0, '#F8BBD0'); grad.addColorStop(1, '#B3E5FC');
+    if (uraLevel >= 8) ctx.rotate(Math.sin(t*3+x)*0.18*(uraLevel-7)*0.15);
+    ctx.strokeStyle="#1a1a1a"; ctx.lineWidth=1.5; ctx.lineJoin="round";
+    let grad=ctx.createLinearGradient(-r,-r,r,r*2.5);
+    if (color==='#F8BBD0') { grad.addColorStop(0,'#F8BBD0'); grad.addColorStop(1,'#B3E5FC'); }
+    else                   { grad.addColorStop(0,'#B3E5FC'); grad.addColorStop(1,'#F8BBD0'); }
+    ctx.beginPath();
+    ctx.arc(0,0,r,0,Math.PI*2);
+    ctx.moveTo(r*0.7,r*0.7);
+    ctx.bezierCurveTo(r*1.2,r*1.2,r*0.8,r*1.8,r*0.3,r*2.2);
+    ctx.arc(r*0.3,r*2.2,r*0.3,0,Math.PI*2);
+    ctx.fillStyle=grad; ctx.fill(); ctx.stroke();
+    ctx.fillStyle="#1a1a1a";
+    if (uraLevel>=10) {
+        ctx.beginPath();
+        ctx.moveTo(-r*0.45,-r*0.15); ctx.lineTo(-r*0.05,-r*0.28);
+        ctx.moveTo(r*0.05,-r*0.28);  ctx.lineTo(r*0.45,-r*0.15);
+        ctx.lineWidth=2.5; ctx.strokeStyle="#1a1a1a"; ctx.stroke();
     } else {
-        grad.addColorStop(0, '#B3E5FC'); grad.addColorStop(1, '#F8BBD0');
+        ctx.beginPath();
+        ctx.arc(-r*0.25,-r*0.15,2.5,0,Math.PI*2);
+        ctx.arc( r*0.25,-r*0.15,2.5,0,Math.PI*2);
+        ctx.fill();
     }
-    ctx.beginPath();
-    ctx.arc(0, 0, r, 0, Math.PI * 2);
-    ctx.moveTo(r*0.7, r*0.7);
-    ctx.bezierCurveTo(r*1.2, r*1.2, r*0.8, r*1.8, r*0.3, r*2.2);
-    ctx.arc(r*0.3, r*2.2, r*0.3, 0, Math.PI * 2);
-    ctx.fillStyle = grad;
-    ctx.fill();
-    ctx.stroke();
-    ctx.fillStyle = "#1a1a1a";
-    ctx.beginPath();
-    ctx.arc(-r*0.25, -r*0.15, 2.5, 0, Math.PI*2);
-    ctx.arc(r*0.25, -r*0.15, 2.5, 0, Math.PI*2);
-    ctx.fill();
     ctx.restore();
 }
 
 function drawHada(x, y, r, color) {
     ctx.save();
     ctx.translate(x, y);
-    ctx.strokeStyle = "#1a1a1a";
-    ctx.lineWidth = 2;
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    ctx.arc(0, 0, r, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
-    ctx.fillStyle = "rgba(80,40,20,0.35)";
-    for(let i=0; i<3; i++) {
-        let rx = Math.sin(x+i*2)*r*0.4;
-        let ry = Math.cos(y+i*2)*r*0.4;
+    if (uraLevel>=6) {
+        let w=(uraLevel-5)*0.5;
+        ctx.translate(Math.sin(t*8+x)*w, Math.cos(t*7+y)*w);
+    }
+    ctx.strokeStyle="#1a1a1a"; ctx.lineWidth=2; ctx.fillStyle=color;
+    ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle="rgba(80,40,20,0.35)";
+    for(let i=0;i<3;i++){
         ctx.beginPath();
-        ctx.arc(rx, ry, 1.2, 0, Math.PI*2);
+        ctx.arc(Math.sin(x+i*2)*r*0.4, Math.cos(y+i*2)*r*0.4, 1.2, 0, Math.PI*2);
         ctx.fill();
+    }
+    if (uraLevel>=9) {
+        ctx.fillStyle="rgba(100,150,220,0.7)";
+        ctx.font=`${r*0.9}px serif`;
+        ctx.textAlign="center";
+        ctx.fillText(";;",r*0.6,-r*0.6);
     }
     ctx.restore();
 }
 
+function drawUraMessages() {
+    if (uraLevel === 0) return;
+    for (let i = 0; i < uraLevel && i < uraMessages.length; i++) {
+        let m = uraMessages[i];
+        let isLateStageCurrent = (i >= 12 && i === uraLevel - 1);
+        let isLateStageOld    = (i >= 12 && i < uraLevel - 1);
+        // 後半メッセージ：最新のものだけ濃く、古いものは薄く残す
+        let alpha;
+        if (i < 12) {
+            alpha = 0.45 + i * 0.045;
+        } else if (isLateStageCurrent) {
+            alpha = 0.95;
+        } else {
+            alpha = 0.18;
+        }
+        let px = m.x * width;
+        let py = m.y * height;
+        let margin = m.size * 4;
+        px = Math.max(margin, Math.min(width - margin, px));
+        py = Math.max(margin, Math.min(height - margin, py));
+        ctx.save();
+        ctx.font = `${m.size}px 'Courier New', monospace`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        // 最終メッセージは赤みがかる
+        if (i === MAX_URA - 1 && isLateStageCurrent) {
+            ctx.fillStyle = `rgba(180,0,0,0.97)`;
+        } else {
+            ctx.fillStyle = `rgba(20,5,5,${alpha})`;
+        }
+        // 後半の現在メッセージは少し揺れる
+        if (isLateStageCurrent && i >= 13) {
+            px += Math.sin(t * 6) * 4;
+            py += Math.cos(t * 5) * 3;
+        }
+        ctx.fillText(m.txt, px, py);
+        ctx.restore();
+    }
+}
+
 function getHadaBallPositions() {
-    let cx = width/2, cy = height/2;
-    let balls = [];
+    let cx=width/2, cy=height/2, balls=[];
     for (let ring of rings) {
-        if (ring.type !== 'hada') continue;
-        for (let i = 0; i < ring.count; i++) {
-            let angle = (i/ring.count)*Math.PI*2 + ring.dir*t*ring.speed;
-            balls.push({
-                x: cx + Math.cos(angle)*ring.orbitR,
-                y: cy + Math.sin(angle)*ring.orbitR,
-                r: ring.ballR,
-                color: hadaColors[i % hadaColors.length]
-            });
+        if (ring.type!=='hada') continue;
+        for (let i=0;i<ring.count;i++) {
+            let angle=(i/ring.count)*Math.PI*2+ring.dir*t*ring.speed;
+            balls.push({ x:cx+Math.cos(angle)*ring.orbitR, y:cy+Math.sin(angle)*ring.orbitR, r:ring.ballR });
         }
     }
     return balls;
@@ -155,63 +216,77 @@ function getHadaBallPositions() {
 
 canvas.addEventListener('click', function(e) {
     if (overlay.classList.contains('active')) return;
-    let rect = canvas.getBoundingClientRect();
-    let mx = e.clientX - rect.left, my = e.clientY - rect.top;
-    let balls = getHadaBallPositions();
+    let rect=canvas.getBoundingClientRect();
+    let mx=e.clientX-rect.left, my=e.clientY-rect.top;
+    let balls=getHadaBallPositions();
     for (let b of balls) {
-        let dx = mx-b.x, dy = my-b.y;
-        if (dx*dx+dy*dy <= b.r*b.r) {
-            clickCount++;
-            counterEl.textContent = 'Klicks: '+clickCount+'/3';
-            if (clickCount >= 3) { triggerError(); }
-            else { triggerShake(); }
+        let dx=mx-b.x, dy=my-b.y;
+        if (dx*dx+dy*dy<=b.r*b.r) {
+            if (!errorDone) {
+                clickCount++;
+                counterEl.textContent='Klicks: '+clickCount+'/3';
+                if (clickCount>=3) triggerError();
+                else triggerShake();
+            } else {
+                if (uraLevel < MAX_URA) {
+                    uraLevel++;
+                    if (uraLevel >= MAX_URA) {
+                        counterEl.textContent='｡°(°´ᯅ`°)°｡';
+                    } else {
+                        counterEl.textContent = uraLevel+'/'+MAX_URA+'...';
+                    }
+                    triggerShake();
+                }
+            }
             break;
         }
     }
 });
 
-function triggerShake() { shaking=true; shakeDuration=25; }
-function triggerError() { shaking=true; shakeDuration=40; setTimeout(()=>overlay.classList.add('active'),400); }
+function triggerShake() { shaking=true; shakeDuration=20; }
+function triggerError() {
+    shaking=true; shakeDuration=40;
+    setTimeout(()=>overlay.classList.add('active'),400);
+}
 
-closeBtn.addEventListener('click', () => {
+closeBtn.addEventListener('click', ()=>{
     overlay.classList.remove('active');
-    clickCount = 0;
-    counterEl.textContent = 'Klicks: 0/3';
+    clickCount=0; errorDone=true; uraLevel=0;
+    counterEl.textContent='0/'+MAX_URA+'...';
 });
 
 function animate() {
     let ox=0, oy=0;
-    if (shaking) {
-        ox=(Math.random()-0.5)*14; oy=(Math.random()-0.5)*14;
-        if(--shakeDuration<=0) shaking=false;
-    }
+    if (shaking) { ox=(Math.random()-0.5)*14; oy=(Math.random()-0.5)*14; if(--shakeDuration<=0)shaking=false; }
+    let skewAmt = uraLevel>=11 ? Math.sin(t*1.2)*(uraLevel-10)*0.012 : 0;
+
     ctx.save();
-    ctx.translate(ox, oy);
+    ctx.translate(ox+width/2, oy+height/2);
+    ctx.transform(1,skewAmt,skewAmt*0.5,1,0,0);
+    ctx.translate(-width/2,-height/2);
 
     let hue1=(t*20+320)%360, hue2=(hue1+120)%360, hue3=(hue1+240)%360;
+    let lightness=Math.max(65, 92-uraLevel*1.5);
     let grad=ctx.createLinearGradient(0,0,width,height);
-    grad.addColorStop(0,`hsla(${hue1},75%,92%,1)`);
-    grad.addColorStop(0.5,`hsla(${hue2},75%,92%,1)`);
-    grad.addColorStop(1,`hsla(${hue3},75%,92%,1)`);
-    ctx.fillStyle=grad;
-    ctx.fillRect(-20,-20,width+40,height+40);
+    grad.addColorStop(0,`hsla(${hue1},75%,${lightness}%,1)`);
+    grad.addColorStop(0.5,`hsla(${hue2},75%,${lightness}%,1)`);
+    grad.addColorStop(1,`hsla(${hue3},75%,${lightness}%,1)`);
+    ctx.fillStyle=grad; ctx.fillRect(-20,-20,width+40,height+40);
 
-    t += 0.004;
+    t+=0.004;
     let cx=width/2, cy=height/2;
-
     for (let ring of rings) {
-        for (let i=0; i<ring.count; i++) {
-            let angle=(i/ring.count)*Math.PI*2 + ring.dir*t*ring.speed;
-            let x=cx+Math.cos(angle)*ring.orbitR;
-            let y=cy+Math.sin(angle)*ring.orbitR;
-            if (ring.type==='hada') {
-                drawHada(x, y, ring.ballR, hadaColors[i%hadaColors.length]);
-            } else {
-                drawGhost(x, y, ring.size, ghostColors[i%2]);
-            }
+        for (let i=0;i<ring.count;i++) {
+            let angle=(i/ring.count)*Math.PI*2+ring.dir*t*ring.speed;
+            let distort=uraLevel>=7 ? 1+Math.sin(t+i)*(uraLevel-6)*0.015 : 1;
+            let x=cx+Math.cos(angle)*ring.orbitR*distort;
+            let y=cy+Math.sin(angle)*ring.orbitR*(2-distort);
+            if(ring.type==='hada') drawHada(x,y,ring.ballR,hadaColors[i%hadaColors.length]);
+            else drawGhost(x,y,ring.size,ghostColors[i%2]);
         }
     }
 
+    drawUraMessages();
     ctx.restore();
     requestAnimationFrame(animate);
 }
