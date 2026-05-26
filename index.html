@@ -168,7 +168,6 @@ function drawUraMessages() {
         let m = uraMessages[i];
         let isLateStageCurrent = (i >= 12 && i === uraLevel - 1);
         let isLateStageOld    = (i >= 12 && i < uraLevel - 1);
-        // 後半メッセージ：最新のものだけ濃く、古いものは薄く残す
         let alpha;
         if (i < 12) {
             alpha = 0.45 + i * 0.045;
@@ -186,13 +185,11 @@ function drawUraMessages() {
         ctx.font = `${m.size}px 'Courier New', monospace`;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        // 最終メッセージは赤みがかる
         if (i === MAX_URA - 1 && isLateStageCurrent) {
             ctx.fillStyle = `rgba(180,0,0,0.97)`;
         } else {
             ctx.fillStyle = `rgba(20,5,5,${alpha})`;
         }
-        // 後半の現在メッセージは少し揺れる
         if (isLateStageCurrent && i >= 13) {
             px += Math.sin(t * 6) * 4;
             py += Math.cos(t * 5) * 3;
