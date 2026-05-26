@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -29,16 +28,10 @@ canvas { display:block; }
     padding:7px 20px; border-radius:3px; cursor:pointer; display:block; width:100%;
 }
 #error-close:hover { background:rgba(255,255,255,0.25); }
-#click-counter {
-    position:absolute; top:10px; right:12px;
-    color:rgba(255,255,255,0.85); font-family:monospace; font-size:11px; z-index:10;
-    background:rgba(0,0,0,0.25); padding:3px 8px; border-radius:4px;
-}
 </style>
 </head>
 <body>
 <canvas id="canvas"></canvas>
-<div id="click-counter">Klicks: 0/3</div>
 <div id="error-overlay">
     <div id="error-box">
         <h2>&#9888; Systemfehler</h2>
@@ -58,7 +51,6 @@ const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 const overlay = document.getElementById('error-overlay');
 const closeBtn = document.getElementById('error-close');
-const counterEl = document.getElementById('click-counter');
 let width, height, t = 0;
 let clickCount = 0, shaking = false, shakeDuration = 0;
 let errorDone = false;
@@ -79,7 +71,6 @@ const uraMessages = [
     { txt:"(°´ᯅ`°)",                            x:0.32, y:0.68, size:26 },
     { txt:"限界です",                                 x:0.55, y:0.40, size:28 },
     { txt:"ほんとうに",                               x:0.22, y:0.45, size:30 },
-    // 後半4枚：中央に順番に出て、前のは薄くフェードして残る
     { txt:"いい加減にしてください",                   x:0.5,  y:0.38, size:32 },
     { txt:"止める気はないんですか？",                 x:0.5,  y:0.52, size:32 },
     { txt:"君のおへそをほじるよ( 👁️ _ 👁️ )？",      x:0.5,  y:0.5,  size:30 },
@@ -221,17 +212,11 @@ canvas.addEventListener('click', function(e) {
         if (dx*dx+dy*dy<=b.r*b.r) {
             if (!errorDone) {
                 clickCount++;
-                counterEl.textContent='Klicks: '+clickCount+'/3';
                 if (clickCount>=3) triggerError();
                 else triggerShake();
             } else {
                 if (uraLevel < MAX_URA) {
                     uraLevel++;
-                    if (uraLevel >= MAX_URA) {
-                        counterEl.textContent='｡°(°´ᯅ`°)°｡';
-                    } else {
-                        counterEl.textContent = uraLevel+'/'+MAX_URA+'...';
-                    }
                     triggerShake();
                 }
             }
@@ -249,7 +234,6 @@ function triggerError() {
 closeBtn.addEventListener('click', ()=>{
     overlay.classList.remove('active');
     clickCount=0; errorDone=true; uraLevel=0;
-    counterEl.textContent='0/'+MAX_URA+'...';
 });
 
 function animate() {
