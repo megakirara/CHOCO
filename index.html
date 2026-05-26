@@ -5,6 +5,29 @@
 <style>
 body { margin:0; padding:0; overflow:hidden; background:#fff; }
 canvas { display:block; }
+
+#back-link {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    z-index: 50;
+    background: rgba(255, 255, 255, 0.5);
+    color: #1a1a1a;
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-family: 'Courier New', monospace, sans-serif;
+    font-weight: bold;
+    font-size: 14px;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s, background 0.2s;
+}
+#back-link:hover {
+    transform: scale(1.05);
+    background: rgba(255, 255, 255, 0.9);
+}
+
 #error-overlay {
     display:none; position:absolute; top:0; left:0; width:100%; height:100%;
     background:rgba(0,0,0,0.45); z-index:100;
@@ -31,6 +54,8 @@ canvas { display:block; }
 </style>
 </head>
 <body>
+<a href="https://megakirara.github.io/-KINOKO/" id="back-link">( 👁️ _ 👁️ )戻る❓</a>
+
 <canvas id="canvas"></canvas>
 <div id="error-overlay">
     <div id="error-box">
@@ -59,21 +84,21 @@ let uraLevel = 0;
 const MAX_URA = 16;
 
 const uraMessages = [
-    { txt:"…？",                                      x:0.2,  y:0.22, size:13 },
-    { txt:"なに？",                                   x:0.75, y:0.72, size:14 },
-    { txt:"まだ押すの",                               x:0.5,  y:0.15, size:14 },
-    { txt:"…………",                                  x:0.25, y:0.80, size:15 },
-    { txt:"やめて",                                   x:0.72, y:0.32, size:16 },
-    { txt:"ねえ",                                     x:0.38, y:0.86, size:18 },
-    { txt:"やめてって言ってる",                       x:0.5,  y:0.5,  size:20 },
-    { txt:"こわい",                                   x:0.18, y:0.58, size:22 },
-    { txt:"もうやだ",                                 x:0.65, y:0.18, size:24 },
-    { txt:"(°´ᯅ`°)",                            x:0.32, y:0.68, size:26 },
-    { txt:"限界です",                                 x:0.55, y:0.40, size:28 },
-    { txt:"ほんとうに",                               x:0.22, y:0.45, size:30 },
-    { txt:"いい加減にしてください",                   x:0.5,  y:0.38, size:32 },
-    { txt:"止める気はないんですか？",                 x:0.5,  y:0.52, size:32 },
-    { txt:"君のおへそをほじるよ( 👁️ _ 👁️ )？",      x:0.5,  y:0.5,  size:30 },
+    { txt:"…？",                     x:0.2,  y:0.22, size:13 },
+    { txt:"なに？",                   x:0.75, y:0.72, size:14 },
+    { txt:"まだ押すの",               x:0.5,  y:0.15, size:14 },
+    { txt:"…………",                   x:0.25, y:0.80, size:15 },
+    { txt:"やめて",                   x:0.72, y:0.32, size:16 },
+    { txt:"ねえ",                     x:0.38, y:0.86, size:18 },
+    { txt:"やめてって言ってる",       x:0.5,  y:0.5,  size:20 },
+    { txt:"こわい",                   x:0.18, y:0.58, size:22 },
+    { txt:"もうやだ",                 x:0.65, y:0.18, size:24 },
+    { txt:"(°´ᯅ`°)",              x:0.32, y:0.68, size:26 },
+    { txt:"限界です",                 x:0.55, y:0.40, size:28 },
+    { txt:"ほんとうに",               x:0.22, y:0.45, size:30 },
+    { txt:"いい加減にしてください",   x:0.5,  y:0.38, size:32 },
+    { txt:"止める気はないんですか？", x:0.5,  y:0.52, size:32 },
+    { txt:"君のおへそをほじるよ( 👁️ _ 👁️ )？",       x:0.5,  y:0.5,  size:30 },
     { txt:"もうやめてよおおおおおおお｡°(°´ᯅ`°)°｡", x:0.5,  y:0.5,  size:28 },
 ];
 
